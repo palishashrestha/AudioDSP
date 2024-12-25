@@ -15,11 +15,13 @@ public:
 private:
     Logger();                                   // Private constructor
     ~Logger();                                  // Private destructor
-    Logger(const Logger &) = delete;            // Disable copy constructor to implement Singleton Design Pattern
-    Logger &operator=(const Logger &) = delete; // Disable assignment operator to implement Singleton Design Pattern
+    Logger(const Logger &) = delete;            // Disable copy constructor to implement Singleton design pattern
+    Logger &operator=(const Logger &) = delete; // Disable assignment operator to implement Singleton design pattern
 
     std::ofstream logFile;
     std::mutex logMutex;
+
+    std::string getTimestamp(); // Helper function to get timestamp
 };
 
 #endif

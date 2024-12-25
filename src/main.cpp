@@ -1,5 +1,6 @@
 #include "logger.h"
 #include <iostream>
+#include <filesystem>
 #include <math.h>
 #include <complex>
 #include <windows.h>
@@ -141,6 +142,7 @@ void runVisualizer(int choice, int lim1, int lim2, bool adaptive, int consoleWid
  */
 int displayMenu()
 {
+    std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
     std::cout << "VISUALIZER OPTIONS\n"
               << "\nScaled Spectrum\n----------------"
               << "\n1 . Fixed semilog"
