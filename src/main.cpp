@@ -1,3 +1,4 @@
+#include "logger.h"
 #include <iostream>
 #include <math.h>
 #include <complex>
@@ -16,11 +17,14 @@ void RecCallback(void *userdata, Uint8 *stream, int streamLength)
 {
     Uint32 length = (Uint32)streamLength;
     MainAudioQueue.push((sample *)stream, length / sizeof(sample));
+    Logger::getInstance().log("RecCallback executed");
 }
+
 void PlayCallback(void *userdata, Uint8 *stream, int streamLength)
 {
     Uint32 length = (Uint32)streamLength;
     MainAudioQueue.pop((sample *)stream, length / sizeof(sample), ::echoVolume);
+    Logger::getInstance().log("PlayCallback executed");
 }
 
 /**
@@ -29,6 +33,7 @@ void PlayCallback(void *userdata, Uint8 *stream, int streamLength)
 void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice)
 {
     SDL_Init(SDL_INIT_AUDIO); // Initialize SDL audio
+    Logger::getInstance().log("Initializing SDL audio");
 
     SDL_AudioSpec RecSpec{}, PlaySpec{};
     RecSpec.freq = RATE;
@@ -44,13 +49,21 @@ void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice
     PlayDevice = SDL_OpenAudioDevice(NULL, 0, &PlaySpec, NULL, 0);
 
     if (PlayDevice <= 0)
+    {
+        Logger::getInstance().log("Failed to open playback device: " + std::string(SDL_GetError()));
         throw std::runtime_error("Failed to open playback device: " + std::string(SDL_GetError()));
+    }
     if (RecDevice <= 0)
+    {
+        Logger::getInstance().log("Failed to open recording device: " + std::string(SDL_GetError()));
         throw std::runtime_error("Failed to open recording device: " + std::string(SDL_GetError()));
+    }
 
     SDL_PauseAudioDevice(RecDevice, 0);  // Start recording
     SDL_Delay(2000);                     // Fill audio buffer
     SDL_PauseAudioDevice(PlayDevice, 0); // Start playback
+
+    Logger::getInstance().log("Audio devices initialized successfully");
 }
 
 /**
@@ -69,9 +82,11 @@ int getValidatedInput(const std::string &prompt, int minValue, int maxValue)
             std::cin.clear();
             std::cin.ignore(INT_MAX, '\n');
             std::cout << "Invalid input. Try again.\n";
+            Logger::getInstance().log("Invalid input received");
         }
         else
         {
+            Logger::getInstance().log("Valid input received: " + std::to_string(value));
             break;
         }
     }
@@ -87,6 +102,8 @@ void runVisualizer(int choice, int lim1, int lim2, bool adaptive, int consoleWid
     SemilogVisualizer semilogVis;
     LinearVisualizer linearVis;
     LoglogVisualizer loglogVis;
+
+    Logger::getInstance().log("Running visualizer with choice: " + std::to_string(choice));
 
     switch (choice)
     {
@@ -113,6 +130,7 @@ void runVisualizer(int choice, int lim1, int lim2, bool adaptive, int consoleWid
         ChordGuesser(MainAudioQueue);
         break;
     default:
+        Logger::getInstance().log("Invalid visualizer option selected");
         throw std::invalid_argument("Invalid visualizer option");
     }
     SDL_Delay(REFRESH_TIME);
@@ -157,6 +175,7 @@ int main(int argc, char **argv)
 
     try
     {
+        Logger::getInstance().log("Application started");
         InitializeAudio(RecDevice, PlayDevice);
 
         int choice, lowerFreq, upperFreq;
@@ -198,9 +217,11 @@ int main(int argc, char **argv)
 
         SDL_CloseAudioDevice(PlayDevice);
         SDL_CloseAudioDevice(RecDevice);
+        Logger::getInstance().log("Application terminated successfully");
     }
     catch (const std::exception &e)
     {
+        Logger::getInstance().log("Error: " + std::string(e.what()));
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
