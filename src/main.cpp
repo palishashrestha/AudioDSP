@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "visualizer.h"
 #include <iostream>
 #include <filesystem>
 #include <math.h>
@@ -7,7 +8,6 @@
 #include <conio.h>
 #include <climits>
 #include <SDL2/SDL.h>
-#include "visualizer.h"
 
 #define REFRESH_TIME 10 // Refresh rate in milliseconds
 
@@ -32,7 +32,7 @@ void PlayCallback(void *userdata, Uint8 *stream, int streamLength)
 void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice)
 {
     SDL_Init(SDL_INIT_AUDIO); // Initialize SDL audio
-    Logger::getInstance().log("Initializing SDL audio", "INFO");
+    logMessage("Initializing SDL audio", "INFO");
 
     SDL_AudioSpec RecSpec{}, PlaySpec{};
     RecSpec.freq = RATE;
@@ -49,12 +49,12 @@ void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice
 
     if (PlayDevice <= 0)
     {
-        Logger::getInstance().log("Failed to open playback device: " + std::string(SDL_GetError()), "ERROR");
+        logMessage("Failed to open playback device: " + std::string(SDL_GetError()), "ERROR");
         throw std::runtime_error("Failed to open playback device: " + std::string(SDL_GetError()));
     }
     if (RecDevice <= 0)
     {
-        Logger::getInstance().log("Failed to open recording device: " + std::string(SDL_GetError()), "ERROR");
+        logMessage("Failed to open recording device: " + std::string(SDL_GetError()), "ERROR");
         throw std::runtime_error("Failed to open recording device: " + std::string(SDL_GetError()));
     }
 
@@ -62,7 +62,7 @@ void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice
     SDL_Delay(2000);                     // Fill audio buffer
     SDL_PauseAudioDevice(PlayDevice, 0); // Start playback
 
-    Logger::getInstance().log("Audio devices initialized successfully", "INFO");
+    logMessage("Audio devices initialized successfully", "INFO");
 }
 
 /**
@@ -81,11 +81,11 @@ int getValidatedInput(const std::string &prompt, int minValue, int maxValue)
             std::cin.clear();
             std::cin.ignore(INT_MAX, '\n');
             std::cout << "Invalid input. Try again.\n";
-            Logger::getInstance().log("Invalid input received", "WARNING");
+            logMessage("Invalid input received", "WARNING");
         }
         else
         {
-            Logger::getInstance().log("Valid input received: " + std::to_string(value), "INFO");
+            logMessage("Valid input received: " + std::to_string(value), "INFO");
             break;
         }
     }
@@ -127,7 +127,7 @@ void runVisualizer(int choice, int lim1, int lim2, bool adaptive, int consoleWid
         ChordGuesser(MainAudioQueue, logOnce);
         break;
     default:
-        Logger::getInstance().log("Invalid visualizer option selected", "ERROR");
+        logMessage("Invalid visualizer option selected", "ERROR");
         throw std::invalid_argument("Invalid visualizer option");
     }
     SDL_Delay(REFRESH_TIME);
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 
     try
     {
-        Logger::getInstance("application.log").log("Application started", "INFO");
+        logMessage("Application started", "INFO");
         InitializeAudio(RecDevice, PlayDevice);
 
         int choice, lowerFreq, upperFreq;
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
         }
 
         echoVolume = getValidatedInput("Enter echo volume (0 = no echo): ", 0, 100);
-        Logger::getInstance().log("Running visualizer with choiceee: " + std::to_string(choice), "INFO");
+        logMessage("Running visualizer with choice: " + std::to_string(choice), "INFO");
 
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         int consoleWidth, consoleHeight;
@@ -199,6 +199,7 @@ int main(int argc, char **argv)
         SDL_Delay(1000);
         system("cls");
         static bool logOnce = true;
+
         for (int i = 0; i < 600000 / REFRESH_TIME; i++)
         {
             GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
@@ -215,11 +216,11 @@ int main(int argc, char **argv)
 
         SDL_CloseAudioDevice(PlayDevice);
         SDL_CloseAudioDevice(RecDevice);
-        Logger::getInstance().log("Application terminated successfully", "INFO");
+        logMessage("Application terminated successfully", "INFO");
     }
     catch (const std::exception &e)
     {
-        Logger::getInstance().log("Error: " + std::string(e.what()), "ERROR");
+        logMessage("Error: " + std::string(e.what()), "ERROR");
         std::cerr << "Error: " << e.what() << std::endl;
     }
 

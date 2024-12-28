@@ -24,4 +24,7 @@ private:
     std::string getTimestamp(); // Helper function to get timestamp
 };
 
+/// Helper function to handle conditional logging
+void logMessage(const std::string &message, const std::string &level, bool logOnce = true);
+
 #endif

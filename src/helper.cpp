@@ -6,15 +6,6 @@
 #include <stdexcept>
 #include <cmath>
 
-/// Helper function to handle conditional logging
-void logMessage(const std::string &message, const std::string &level, bool logOnce)
-{
-    if (logOnce)
-    {
-        Logger::getInstance().log(message, level);
-    }
-}
-
 /// Generic function to validate input size
 void validate_size(int size, int threshold, const std::string &message, bool logOnce)
 {

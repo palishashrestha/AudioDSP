@@ -16,6 +16,5 @@ float approx_hcf(float inputs[], int num_inputs, bool logOnce, int max_iter = 5,
 void Find_n_Largest(int *output, sample *input, int n_out, int n_in, bool logOnce, bool ignore_clumped = true);
 int pitchNumber(float freq, bool logOnce, float *centsSharp = nullptr);
 int pitchName(char *name, int pitch_num, bool logOnce);
-void logMessage(const std::string &message, const std::string &level, bool logOnce);
 
 #endif

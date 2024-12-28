@@ -49,3 +49,12 @@ std::string Logger::getTimestamp()
     oss << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S"); // Format: YYYY-MM-DD HH:mm:ss
     return oss.str();
 }
+
+/// Helper function to handle conditional logging
+void logMessage(const std::string &message, const std::string &level, bool logOnce)
+{
+    if (logOnce)
+    {
+        Logger::getInstance().log(message, level);
+    }
+}

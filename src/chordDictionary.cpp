@@ -1,5 +1,6 @@
 #include "chordDictionary.h"
 #include "helper.h"
+#include "logger.h"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -44,7 +45,10 @@ bool chord::contains(int notes_in[], int num_notes_in)
 chord transpose_chord(chord old_chord, int semitones_up)
 {
     if (semitones_up < -11 || semitones_up > 11)
+    {
+        logMessage("Invalid transpose semitones: " + std::to_string(semitones_up), "ERROR");
         throw std::invalid_argument("Transpose semitones must be between -11 and 11.");
+    }
 
     chord new_chord = old_chord;
 
@@ -52,6 +56,7 @@ chord transpose_chord(chord old_chord, int semitones_up)
         new_chord.notes[i] = (old_chord.notes[i] + semitones_up - 1) % 12 + 1;
 
     pitchName(new_chord.name, new_chord.notes[0], true); // Update chord name
+    logMessage("Transposed chord: " + std::string(new_chord.name) + " by " + std::to_string(semitones_up) + " semitones.", "INFO");
     return new_chord;
 }
 
@@ -59,8 +64,12 @@ chord transpose_chord(chord old_chord, int semitones_up)
 void initialize_chord_dictionary()
 {
     if (chord_dictionary_initialized)
+    {
+        logMessage("Chord dictionary already initialized.", "INFO");
         return;
+    }
 
+    logMessage("Initializing chord dictionary.", "INFO");
     for (int i = 0; i < NUM_CHORD_TYPES; i++)
     {
         for (int j = 0; j < 12; j++)
@@ -69,16 +78,25 @@ void initialize_chord_dictionary()
         }
     }
     chord_dictionary_initialized = true;
+    logMessage("Chord dictionary initialized successfully.", "INFO");
 }
 
 /// Identify the chord that matches the input notes
 int identify_chord(char *name_out, int notes[], int num_notes)
 {
     if (!chord_dictionary_initialized)
+    {
+        logMessage("Chord dictionary not initialized. Initializing now.", "WARNING");
         initialize_chord_dictionary();
+    }
 
     if (num_notes <= 0)
+    {
+        logMessage("Invalid number of input notes: " + std::to_string(num_notes), "ERROR");
         throw std::invalid_argument("Number of input notes must be greater than zero.");
+    }
+
+    logMessage("Identifying chord for input notes.", "INFO");
 
     int candidates[NUM_CHORD_TYPES * 12];
     int num_candidates = 0;
@@ -93,7 +111,10 @@ int identify_chord(char *name_out, int notes[], int num_notes)
     }
 
     if (num_candidates == 0)
+    {
+        logMessage("No matching chord found for input notes.", "WARNING");
         return 0; // No matching chord found
+    }
 
     // Filter candidates: Find smallest chord (minimum num_notes)
     int min_size = all_chords[candidates[0]].num_notes;
@@ -124,5 +145,6 @@ int identify_chord(char *name_out, int notes[], int num_notes)
     }
     name_out[name_length] = '\0';
 
+    logMessage("Identified chord: " + std::string(name_out), "INFO");
     return name_length;
 }

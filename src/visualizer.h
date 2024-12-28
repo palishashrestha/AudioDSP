@@ -15,9 +15,9 @@ protected:
     int graphheight; /// Height of the graph
     std::vector<int> bargraph;
 
-    void initializeHistogram();
-    void applyAdaptiveScaling(bool adaptive, float &graphScale);
-    void smoothHistogram();
+    void initializeHistogram(bool logOnce);
+    void applyAdaptiveScaling(bool adaptive, float &graphScale, bool logOnce);
+    void smoothHistogram(bool logOnce);
 
 public:
     virtual void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale = 0.0008) = 0;

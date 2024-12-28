@@ -12,24 +12,24 @@ AudioQueue::AudioQueue(int QueueLength) : len(QueueLength), inpos(0), outpos(0)
 {
     if (QueueLength <= 0)
     {
-        Logger::getInstance().log("Queue length must be greater than zero.", "ERROR");
+        logMessage("Queue length must be greater than zero.", "ERROR");
         throw std::invalid_argument("Queue length must be greater than zero.");
     }
     audio = new sample[len];
-    Logger::getInstance().log("AudioQueue created with length: " + std::to_string(QueueLength), "INFO");
+    logMessage("AudioQueue created with length: " + std::to_string(QueueLength), "INFO");
 }
 
 AudioQueue::~AudioQueue()
 {
     delete[] audio;
-    Logger::getInstance().log("AudioQueue destroyed.", "INFO");
+    logMessage("AudioQueue destroyed.", "INFO");
 }
 
 void AudioQueue::validate_space(int n_samples) const
 {
     if (!space_available(n_samples))
     {
-        Logger::getInstance().log("Audio queue overflow: insufficient space available.", "ERROR");
+        logMessage("Audio queue overflow: insufficient space available.", "ERROR");
         throw std::overflow_error("Audio queue overflow: insufficient space available.");
     }
 }
@@ -38,7 +38,7 @@ void AudioQueue::validate_data(int n_samples) const
 {
     if (!data_available(n_samples))
     {
-        Logger::getInstance().log("Audio queue underflow: insufficient data available.", "ERROR");
+        logMessage("Audio queue underflow: insufficient data available.", "ERROR");
         throw std::underflow_error("Audio queue underflow: insufficient data available.");
     }
 }
@@ -96,13 +96,13 @@ void fft(cmplx *output, const cmplx *input, int n)
     static bool logOnce = true; // Ensure single logging for the entire FFT computation
     if (logOnce)
     {
-        Logger::getInstance().log("Starting FFT computation for " + std::to_string(n) + " samples.", "INFO");
+        logMessage("Starting FFT computation for " + std::to_string(n) + " samples.", "INFO", logOnce);
         logOnce = false;
     }
 
     if (n <= 0 || (n & (n - 1)) != 0)
     {
-        Logger::getInstance().log("Input size for FFT must be a power of two and greater than zero.", "ERROR");
+        logMessage("Input size for FFT must be a power of two and greater than zero.", "ERROR");
         throw std::invalid_argument("Input size for FFT must be a power of two and greater than zero.");
     }
 
@@ -135,13 +135,10 @@ void FindFrequencyContent(sample *output, const sample *input, int n, bool logOn
 {
     if (n <= 0 || (n & (n - 1)) != 0)
     {
-        Logger::getInstance().log("Input size for FFT must be a power of two and greater than zero.", "ERROR");
+        logMessage("Input size for FFT must be a power of two and greater than zero.", "ERROR");
         throw std::invalid_argument("Input size for FFT must be a power of two and greater than zero.");
     }
-    if (logOnce)
-    {
-        Logger::getInstance().log("Starting Frequency Content for " + std::to_string(n) + " samples.", "INFO");
-    }
+    logMessage("Starting Frequency Content computation for " + std::to_string(n) + " samples.", "INFO", logOnce);
 
     std::vector<cmplx> fftin(n), fftout(n);
     for (int i = 0; i < n; i++)
@@ -156,4 +153,5 @@ void FindFrequencyContent(sample *output, const sample *input, int n, bool logOn
         double magnitude = abs(fftout[i]) * vScale;
         output[i] = static_cast<sample>(std::min(magnitude, static_cast<double>(MAX_SAMPLE_VALUE)));
     }
+    logMessage("Frequency Content computation completed for " + std::to_string(n) + " samples.", "INFO", logOnce);
 }
