@@ -11,7 +11,7 @@
 class Visualizer
 {
 protected:
-    int numbars;     /// Number of bars in the histogram
+    int numbers;     /// Number of bars in the histogram
     int graphheight; /// Height of the graph
     std::vector<int> bargraph;
 

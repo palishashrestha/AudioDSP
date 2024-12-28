@@ -51,7 +51,7 @@ chord transpose_chord(chord old_chord, int semitones_up)
     for (int i = 0; i < old_chord.num_notes; ++i)
         new_chord.notes[i] = (old_chord.notes[i] + semitones_up - 1) % 12 + 1;
 
-    pitchName(new_chord.name, new_chord.notes[0]); // Update chord name
+    pitchName(new_chord.name, new_chord.notes[0], true); // Update chord name
     return new_chord;
 }
 
