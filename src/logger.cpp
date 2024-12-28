@@ -3,13 +3,14 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <filesystem>
 
-Logger::Logger()
+Logger::Logger(const std::string &filePath)
 {
-    logFile.open("application.log", std::ios::app); // Log file in the current working directory
+    logFile.open(filePath, std::ios::app); // Log file in the specified path
     if (!logFile.is_open())
     {
-        std::cerr << "Failed to open log file." << std::endl;
+        std::cerr << "Failed to open log file: " << filePath << std::endl;
     }
 }
 
@@ -21,22 +22,23 @@ Logger::~Logger()
     }
 }
 
-Logger &Logger::getInstance()
+Logger &Logger::getInstance(const std::string &filePath)
 {
-    static Logger instance;
+    static Logger instance(filePath.empty() ? "application.log" : filePath); // Default to application.log if no path is provided
     return instance;
 }
 
-void Logger::log(const std::string &message)
+void Logger::log(const std::string &message, const std::string &severity)
 {
     std::lock_guard<std::mutex> lock(logMutex);
     if (logFile.is_open())
     {
-        logFile << getTimestamp() << " - " << message << std::endl; // Include timestamp
+        logFile << getTimestamp() << " [" << severity << "] - " << message << std::endl;
+        logFile.flush(); // Ensure data is written to disk immediately
     }
     else
     {
-        std::cerr << getTimestamp() << " - Log file is not open. Message: " << message << std::endl;
+        std::cerr << getTimestamp() << " [" << severity << "] - Log file is not open. Message: " << message << std::endl;
     }
 }
 

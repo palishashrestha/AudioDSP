@@ -1,4 +1,5 @@
 #include "visualizer.h"
+#include "logger.h" // Include Logger
 #include <algorithm>
 #include <stdexcept>
 #include <cmath>
@@ -8,6 +9,7 @@
 void Visualizer::initializeHistogram()
 {
     bargraph.assign(numbars, 0);
+    Logger::getInstance().log("Initialized histogram with " + std::to_string(numbars) + " bars.", "INFO");
 }
 
 void Visualizer::applyAdaptiveScaling(bool adaptive, float &graphScale)
@@ -18,6 +20,8 @@ void Visualizer::applyAdaptiveScaling(bool adaptive, float &graphScale)
     int maxv = *std::max_element(bargraph.begin(), bargraph.end());
     if (maxv > 0)
         graphScale = 1.0f / maxv;
+
+    Logger::getInstance().log("Applied adaptive scaling with graph scale: " + std::to_string(graphScale), "INFO");
 }
 
 void Visualizer::smoothHistogram()
@@ -27,11 +31,15 @@ void Visualizer::smoothHistogram()
         if (bargraph[i] == 0)
             bargraph[i] = (bargraph[i - 1] + bargraph[i + 1]) / 2;
     }
+
+    Logger::getInstance().log("Smoothed histogram for " + std::to_string(numbars) + " bars.", "INFO");
 }
 
 /// ----- Semilog Visualizer -----
-void SemilogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale)
+void SemilogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale)
 {
+    Logger::getInstance().log("Semilog visualization started.", "INFO");
+
     sample workingBuffer[FFTLEN];
     sample spectrum[FFTLEN];
 
@@ -40,7 +48,7 @@ void SemilogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int m
     initializeHistogram();
 
     MainAudioQueue.peekFreshData(workingBuffer, FFTLEN);
-    FindFrequencyContent(spectrum, workingBuffer, FFTLEN);
+    FindFrequencyContent(spectrum, workingBuffer, FFTLEN, logOnce);
 
     int Freq0idx = freq2index(minfreq);
     int FreqLidx = freq2index(maxfreq);
@@ -56,11 +64,17 @@ void SemilogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int m
 
     system("cls");
     show_bargraph(bargraph.data(), numbars, graphheight, 1, graphScale * graphheight, ':');
+    if (logOnce)
+    {
+        Logger::getInstance().log("Semilog visualization completed.", "INFO");
+    }
 }
 
 /// ----- Linear Visualizer -----
-void LinearVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale)
+void LinearVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale)
 {
+    Logger::getInstance().log("Linear visualization started.", "INFO");
+
     sample workingBuffer[FFTLEN];
     sample spectrum[FFTLEN];
 
@@ -69,7 +83,7 @@ void LinearVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int ma
     initializeHistogram();
 
     MainAudioQueue.peekFreshData(workingBuffer, FFTLEN);
-    FindFrequencyContent(spectrum, workingBuffer, FFTLEN);
+    FindFrequencyContent(spectrum, workingBuffer, FFTLEN, logOnce);
 
     int bucketwidth = FFTLEN / numbars;
     int Freq0idx = freq2index(minfreq);
@@ -86,11 +100,17 @@ void LinearVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int ma
 
     system("cls");
     show_bargraph(bargraph.data(), numbars, graphheight, 1, graphScale * graphheight, ':');
+    if (logOnce)
+    {
+        Logger::getInstance().log("Linear visualization completed.", "INFO");
+    }
 }
 
 /// ----- Loglog Visualizer -----
-void LoglogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale)
+void LoglogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale)
 {
+    Logger::getInstance().log("Loglog visualization started.", "INFO");
+
     sample workingBuffer[FFTLEN];
     sample spectrum[FFTLEN];
 
@@ -99,7 +119,7 @@ void LoglogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int ma
     initializeHistogram();
 
     MainAudioQueue.peekFreshData(workingBuffer, FFTLEN);
-    FindFrequencyContent(spectrum, workingBuffer, FFTLEN);
+    FindFrequencyContent(spectrum, workingBuffer, FFTLEN, logOnce);
 
     int Freq0idx = freq2index(minfreq);
     int FreqLidx = freq2index(maxfreq);
@@ -111,43 +131,45 @@ void LoglogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int ma
     }
 
     applyAdaptiveScaling(adaptive, graphScale);
+
     system("cls");
     show_bargraph(bargraph.data(), numbars, graphheight, 1, graphScale * graphheight, ':');
+    if (logOnce)
+    {
+        Logger::getInstance().log("Loglog visualization completed.", "INFO");
+    }
 }
 
 /// ----- Spectral Tuner -----
-void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeight, bool adaptive, float graphScale)
+void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeight, bool logOnce, bool adaptive, float graphScale)
 {
     sample workingBuffer[FFTLEN];
     sample spectrum[FFTLEN];
 
     const int numbars = consoleWidth;
-    const int graphheight = consoleHeight - 3; /// Minus 3 to leave room for pitch labels.
+    const int graphheight = consoleHeight - 3; // Leave room for pitch labels
 
     std::vector<int> bargraph(numbars, 0);
     std::vector<float> octaveIndices(numbars + 1);
 
-    /// Calculate fractional indices for one octave
     for (int i = 0; i <= numbars; i++)
     {
-        octaveIndices[i] = freq2index(55.0 * pow(2, (float)i / numbars)); // Starts from A1 = 55Hz
+        octaveIndices[i] = freq2index(55.0 * pow(2, (float)i / numbars)); // Start from A1 = 55Hz
     }
 
     MainAudioQueue.peekFreshData(workingBuffer, FFTLEN);
-    FindFrequencyContent(spectrum, workingBuffer, FFTLEN);
+    FindFrequencyContent(spectrum, workingBuffer, FFTLEN, logOnce);
 
-    /// Map frequencies to histogram
     for (int i = 0; i < numbars; i++)
     {
         float startIdx = octaveIndices[i];
         float endIdx = octaveIndices[i + 1];
         for (int j = round(startIdx); j < round(endIdx); j++)
         {
-            bargraph[i] += spectrum[j] / (endIdx - startIdx); // Normalize based on width
+            bargraph[i] += spectrum[j] / (endIdx - startIdx);
         }
     }
 
-    /// Adaptive Scaling
     if (adaptive)
     {
         int maxVal = *std::max_element(bargraph.begin(), bargraph.end());
@@ -158,77 +180,80 @@ void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeig
     system("cls");
     std::cout << "A    A#   B    C    C#   D    D#   E    F    F#   G    G#\n";
     show_bargraph(bargraph.data(), numbars, graphheight, 1, graphScale * graphheight, '=');
+    if (logOnce)
+    {
+        Logger::getInstance().log("Spectral tuner visualization completed.", "INFO");
+    }
 }
 
 /// ----- Auto Tuner -----
-void AutoTuner(AudioQueue &MainAudioQueue, int consoleWidth, int span_semitones)
+void AutoTuner(AudioQueue &MainAudioQueue, int consoleWidth, bool logOnce, int span_semitones)
 {
+    Logger::getInstance().log("Auto tuner visualization started.", "INFO");
+
     sample workingBuffer[FFTLEN];
     sample spectrum[FFTLEN];
 
-    // Fetch audio data and compute frequency content
     MainAudioQueue.peekFreshData(workingBuffer, FFTLEN);
-    FindFrequencyContent(spectrum, workingBuffer, FFTLEN);
+    FindFrequencyContent(spectrum, workingBuffer, FFTLEN, logOnce);
 
     const int numSpikes = 5;
     int spikeIndices[numSpikes];
     float spikeFrequencies[numSpikes];
 
-    /// Find peaks in spectrum
     Find_n_Largest(spikeIndices, spectrum, numSpikes, FFTLEN / 2);
     for (int i = 0; i < numSpikes; i++)
     {
         spikeFrequencies[i] = index2freq(spikeIndices[i]);
     }
 
-    /// Estimate pitch using HCF approximation
     float pitch = approx_hcf(spikeFrequencies, numSpikes, 5, 5);
     if (pitch <= 0)
     {
+        Logger::getInstance().log("No pitch detected.", "WARNING");
         std::cerr << "No pitch detected.\n";
         return;
     }
 
-    /// Determine pitch number and cents deviation
     float centsOff = 0.0f;
     int pitchNum = pitchNumber(pitch, &centsOff);
 
-    /// Use std::vector for dynamic size
     std::vector<char> notenames(consoleWidth + 1, ' ');
 
     int centerPosition = consoleWidth / 2 - static_cast<int>(centsOff * consoleWidth / (span_semitones * 100));
-    centerPosition = std::max(0, std::min(centerPosition, consoleWidth - 2)); // Keep it in bounds
+    centerPosition = std::max(0, std::min(centerPosition, consoleWidth - 2));
 
     pitchName(notenames.data() + centerPosition, pitchNum);
+    notenames[consoleWidth] = '\0';
 
-    notenames[consoleWidth] = '\0'; // Null-terminate the string
-
-    /// Clear the screen and display the output
     system("cls");
     std::cout << "Output note name is: " << notenames.data() << "\n";
+    if (logOnce)
+    {
+        Logger::getInstance().log("Auto tuner visualization completed.", "INFO");
+    }
 }
-
-void ChordGuesser(AudioQueue &MainAudioQueue, int max_notes)
+/// ----- Chord Guesser -----
+void ChordGuesser(AudioQueue &MainAudioQueue, bool logOnce, int max_notes)
 {
+    Logger::getInstance().log("Chord guesser started.", "INFO");
+
     sample workingBuffer[FFTLEN];
     sample spectrum[FFTLEN];
 
-    // Fetch audio data and compute frequency content
     MainAudioQueue.peekFreshData(workingBuffer, FFTLEN);
-    FindFrequencyContent(spectrum, workingBuffer, FFTLEN);
+    FindFrequencyContent(spectrum, workingBuffer, FFTLEN, logOnce);
 
-    const int numSpikes = 10; // Analyze up to 10 peaks
+    const int numSpikes = 10;
     int spikeIndices[numSpikes];
     float spikeFrequencies[numSpikes];
 
-    /// Find peaks in spectrum
     Find_n_Largest(spikeIndices, spectrum, numSpikes, FFTLEN / 2, false);
     for (int i = 0; i < numSpikes; i++)
     {
         spikeFrequencies[i] = index2freq(spikeIndices[i]);
     }
 
-    /// Identify unique pitches
     const float quartertone = pow(2.0, 1.0 / 24.0);
     std::vector<int> chordTones;
 
@@ -250,15 +275,12 @@ void ChordGuesser(AudioQueue &MainAudioQueue, int max_notes)
         }
     }
 
-    /// Remove duplicate pitches
     std::sort(chordTones.begin(), chordTones.end());
     chordTones.erase(std::unique(chordTones.begin(), chordTones.end()), chordTones.end());
 
-    /// Identify the chord
     char chordName[CHORD_NAME_SIZE] = {0};
     int nameLength = identify_chord(chordName, chordTones.data(), chordTones.size());
 
-    /// Display the chord name
     if (nameLength > 0)
     {
         std::cout << "\nDetected Chord: " << chordName << " (";
@@ -269,9 +291,15 @@ void ChordGuesser(AudioQueue &MainAudioQueue, int max_notes)
             std::cout << noteName << (i < chordTones.size() - 1 ? " " : "");
         }
         std::cout << ")\n";
+        Logger::getInstance().log("Detected Chord: " + std::string(chordName), "INFO");
     }
     else
     {
-        std::cout << "\nNo Chord Detected\n";
+        std::cout << "\n No Chord Detected\n";
+        Logger::getInstance().log("No chord detected.", "WARNING");
+    }
+    if (logOnce)
+    {
+        Logger::getInstance().log("Chord guesser completed.", "INFO");
     }
 }

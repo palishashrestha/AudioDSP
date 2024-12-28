@@ -1,4 +1,5 @@
 #include "audioProcessor.h"
+#include "logger.h"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -11,20 +12,24 @@ AudioQueue::AudioQueue(int QueueLength) : len(QueueLength), inpos(0), outpos(0)
 {
     if (QueueLength <= 0)
     {
+        Logger::getInstance().log("Queue length must be greater than zero.", "ERROR");
         throw std::invalid_argument("Queue length must be greater than zero.");
     }
     audio = new sample[len];
+    Logger::getInstance().log("AudioQueue created with length: " + std::to_string(QueueLength), "INFO");
 }
 
 AudioQueue::~AudioQueue()
 {
     delete[] audio;
+    Logger::getInstance().log("AudioQueue destroyed.", "INFO");
 }
 
 void AudioQueue::validate_space(int n_samples) const
 {
     if (!space_available(n_samples))
     {
+        Logger::getInstance().log("Audio queue overflow: insufficient space available.", "ERROR");
         throw std::overflow_error("Audio queue overflow: insufficient space available.");
     }
 }
@@ -33,32 +38,19 @@ void AudioQueue::validate_data(int n_samples) const
 {
     if (!data_available(n_samples))
     {
+        Logger::getInstance().log("Audio queue underflow: insufficient data available.", "ERROR");
         throw std::underflow_error("Audio queue underflow: insufficient data available.");
     }
 }
 
 bool AudioQueue::data_available(int n_samples) const
 {
-    if (inpos >= outpos)
-    {
-        return (inpos - outpos) >= n_samples;
-    }
-    else
-    {
-        return (inpos + len - outpos) >= n_samples;
-    }
+    return (inpos >= outpos) ? (inpos - outpos) >= n_samples : (inpos + len - outpos) >= n_samples;
 }
 
 bool AudioQueue::space_available(int n_samples) const
 {
-    if (inpos >= outpos)
-    {
-        return (outpos + len - inpos) > n_samples;
-    }
-    else
-    {
-        return (outpos - inpos) > n_samples;
-    }
+    return (inpos >= outpos) ? (outpos + len - inpos) > n_samples : (outpos - inpos) > n_samples;
 }
 
 void AudioQueue::push(const sample *input, int n_samples, float volume)
@@ -99,36 +91,18 @@ void AudioQueue::peekFreshData(sample *output, int n_samples, float volume) cons
     }
 }
 
-void dftmag(sample *output, const sample *input, int n)
-{
-    if (n <= 0)
-    {
-        throw std::invalid_argument("Input size for DFT must be greater than zero.");
-    }
-
-    std::vector<float> sinArr(n), cosArr(n);
-    for (int i = 0; i < n; i++)
-    {
-        sinArr[i] = sin(i * 2 * M_PI / n);
-        cosArr[i] = cos(i * 2 * M_PI / n);
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        double real = 0, imag = 0;
-        for (int j = 0; j < n; j++)
-        {
-            real += input[j] * cosArr[(i * j) % n];
-            imag += input[j] * sinArr[(i * j) % n];
-        }
-        output[i] = static_cast<sample>(sqrt(real * real + imag * imag));
-    }
-}
-
 void fft(cmplx *output, const cmplx *input, int n)
 {
+    static bool logOnce = true; // Ensure single logging for the entire FFT computation
+    if (logOnce)
+    {
+        Logger::getInstance().log("Starting FFT computation for " + std::to_string(n) + " samples.", "INFO");
+        logOnce = false;
+    }
+
     if (n <= 0 || (n & (n - 1)) != 0)
     {
+        Logger::getInstance().log("Input size for FFT must be a power of two and greater than zero.", "ERROR");
         throw std::invalid_argument("Input size for FFT must be a power of two and greater than zero.");
     }
 
@@ -157,11 +131,16 @@ void fft(cmplx *output, const cmplx *input, int n)
     }
 }
 
-void FindFrequencyContent(sample *output, const sample *input, int n, float vScale)
+void FindFrequencyContent(sample *output, const sample *input, int n, bool logOnce, float vScale)
 {
     if (n <= 0 || (n & (n - 1)) != 0)
     {
+        Logger::getInstance().log("Input size for FFT must be a power of two and greater than zero.", "ERROR");
         throw std::invalid_argument("Input size for FFT must be a power of two and greater than zero.");
+    }
+    if (logOnce)
+    {
+        Logger::getInstance().log("Starting Frequency Content for " + std::to_string(n) + " samples.", "INFO");
     }
 
     std::vector<cmplx> fftin(n), fftout(n);
@@ -170,7 +149,7 @@ void FindFrequencyContent(sample *output, const sample *input, int n, float vSca
         fftin[i] = static_cast<cmplx>(input[i]);
     }
 
-    fft(fftout.data(), fftin.data(), n);
+    fft(fftout.data(), fftin.data(), n); // Call FFT recursively
 
     for (int i = 0; i < n; i++)
     {

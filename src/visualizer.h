@@ -20,33 +20,33 @@ protected:
     void smoothHistogram();
 
 public:
-    virtual void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale = 0.0008) = 0;
+    virtual void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale = 0.0008) = 0;
 };
 
 /// Semilog Visualizer
 class SemilogVisualizer : public Visualizer
 {
 public:
-    void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale = 0.0008) override;
+    void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale = 0.0008) override;
 };
 
 /// Linear Visualizer
 class LinearVisualizer : public Visualizer
 {
 public:
-    void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale = 0.0008) override;
+    void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale = 0.0008) override;
 };
 
 /// Loglog Visualizer
 class LoglogVisualizer : public Visualizer
 {
 public:
-    void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, float graphScale = 0.0008) override;
+    void visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale = 0.0008) override;
 };
 
 /// Spectral Tuner
-void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeight, bool adaptive = false, float graphScale = 0.0008);
-void AutoTuner(AudioQueue &MainAudioQueue, int consoleWidth, int span_semitones = 4);
-void ChordGuesser(AudioQueue &MainAudioQueue, int max_notes = 4);
+void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeight, bool logOnce, bool adaptive = false, float graphScale = 0.0008);
+void AutoTuner(AudioQueue &MainAudioQueue, int consoleWidth, bool logOnce, int span_semitones = 4);
+void ChordGuesser(AudioQueue &MainAudioQueue, bool logOnce, int max_notes = 4);
 
 #endif // VISUALIZER_H

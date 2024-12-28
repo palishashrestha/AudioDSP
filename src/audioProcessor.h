@@ -48,15 +48,6 @@ public:
 };
 
 /**
- * dftmag()
- * Performs a Discrete Fourier Transform (O(n^2)) to calculate the magnitude of the frequency components.
- * @param output: Array to store the magnitude results.
- * @param input: Input audio samples.
- * @param n: Number of samples (size of input/output; must be > 0).
- */
-void dftmag(sample *output, const sample *input, int n);
-
-/**
  * fft()
  * Performs a Fast Fourier Transform (FFT) using the Cooley-Tukey algorithm.
  * @param output: Array to store the FFT result.
@@ -74,6 +65,6 @@ void fft(cmplx *output, const cmplx *input, int n);
  * @param vScale: Volume scaling factor (default = 0.005).
  * @throws std::invalid_argument if n is not a power of 2.
  */
-void FindFrequencyContent(sample *output, const sample *input, int n, float vScale = 0.005);
+void FindFrequencyContent(sample *output, const sample *input, int n, bool logOnce, float vScale = 0.005);
 
 #endif // AUDIODSP_H
