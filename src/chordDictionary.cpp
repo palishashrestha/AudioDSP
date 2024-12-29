@@ -53,10 +53,26 @@ chord transpose_chord(chord old_chord, int semitones_up)
     chord new_chord = old_chord;
 
     for (int i = 0; i < old_chord.num_notes; ++i)
-        new_chord.notes[i] = (old_chord.notes[i] + semitones_up - 1) % 12 + 1;
+    {
+        new_chord.notes[i] = ((old_chord.notes[i] + semitones_up - 1) % 12 + 12) % 12 + 1;
+    }
 
     pitchName(new_chord.name, new_chord.notes[0], true); // Update chord name
-    logMessage("Transposed chord: " + std::string(new_chord.name) + " by " + std::to_string(semitones_up) + " semitones.", "INFO");
+
+    // Log original and transposed notes
+    std::string original_notes = "[";
+    for (int i = 0; i < old_chord.num_notes; ++i)
+    {
+        original_notes += std::to_string(old_chord.notes[i]) + (i < old_chord.num_notes - 1 ? ", " : "]");
+    }
+
+    std::string transposed_notes = "[";
+    for (int i = 0; i < new_chord.num_notes; ++i)
+    {
+        transposed_notes += std::to_string(new_chord.notes[i]) + (i < new_chord.num_notes - 1 ? ", " : "]");
+    }
+
+    logMessage("Transposed chord from " + original_notes + " to " + transposed_notes + " by " + std::to_string(semitones_up) + " semitones.", "INFO");
     return new_chord;
 }
 
@@ -84,6 +100,12 @@ void initialize_chord_dictionary()
 /// Identify the chord that matches the input notes
 int identify_chord(char *name_out, int notes[], int num_notes)
 {
+    if (name_out == nullptr)
+    {
+        logMessage("Output buffer is null.", "ERROR");
+        throw std::invalid_argument("Output buffer cannot be null.");
+    }
+
     if (!chord_dictionary_initialized)
     {
         logMessage("Chord dictionary not initialized. Initializing now.", "WARNING");
@@ -116,24 +138,33 @@ int identify_chord(char *name_out, int notes[], int num_notes)
         return 0; // No matching chord found
     }
 
-    // Filter candidates: Find smallest chord (minimum num_notes)
-    int min_size = all_chords[candidates[0]].num_notes;
-    for (int i = 1; i < num_candidates; i++)
-    {
-        if (all_chords[candidates[i]].num_notes < min_size)
-            min_size = all_chords[candidates[i]].num_notes;
-    }
+    logMessage("Number of candidates found: " + std::to_string(num_candidates), "INFO");
 
+    // Filter candidates to find the best match
     int best_candidate = -1;
+    int min_size = INT_MAX;
+
     for (int i = 0; i < num_candidates; i++)
     {
-        if (all_chords[candidates[i]].num_notes == min_size)
+        int candidate_index = candidates[i];
+        if (all_chords[candidate_index].num_notes < min_size ||
+            (all_chords[candidate_index].num_notes == min_size && all_chords[candidate_index].notes[0] == notes[0]))
         {
-            if (best_candidate == -1 || all_chords[candidates[i]].notes[0] == notes[0])
-            {
-                best_candidate = candidates[i];
-            }
+            best_candidate = candidate_index;
+            min_size = all_chords[candidate_index].num_notes;
         }
+    }
+
+    if (best_candidate == -1)
+    {
+        logMessage("No valid candidate found after filtering.", "WARNING");
+        return 0; // No valid candidate found
+    }
+
+    if (all_chords[best_candidate].name[0] == '\0')
+    {
+        logMessage("Chord name is empty for the best candidate.", "ERROR");
+        throw std::runtime_error("Invalid chord name for the best candidate.");
     }
 
     // Write the chord name to name_out
