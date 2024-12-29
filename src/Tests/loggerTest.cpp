@@ -22,7 +22,7 @@ TEST(LoggerTest, LogMessage)
     bool messageLogged = false;
     while (std::getline(logFile, line))
     {
-        if (line.find("Test message") != std::string::npos)
+        if (line.find("Unit Testing for Logger module") != std::string::npos)
         {
             messageLogged = true;
             break;
