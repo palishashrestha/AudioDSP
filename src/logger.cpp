@@ -12,6 +12,10 @@ Logger::Logger(const std::string &filePath)
     {
         std::cerr << "Failed to open log file: " << filePath << std::endl;
     }
+    else
+    {
+        std::cout << "Log file opened successfully: " << filePath << std::endl;
+    }
 }
 
 Logger::~Logger()
@@ -28,13 +32,14 @@ Logger &Logger::getInstance(const std::string &filePath)
     return instance;
 }
 
+// Log message with severity
 void Logger::log(const std::string &message, const std::string &severity)
 {
     std::lock_guard<std::mutex> lock(logMutex);
     if (logFile.is_open())
     {
         logFile << getTimestamp() << " [" << severity << "] - " << message << std::endl;
-        logFile.flush(); // Ensure data is written to disk immediately
+        logFile.flush(); // Ensure the log is written immediately
     }
     else
     {
@@ -42,15 +47,16 @@ void Logger::log(const std::string &message, const std::string &severity)
     }
 }
 
+// Get timestamp for log messages
 std::string Logger::getTimestamp()
 {
     auto now = std::time(nullptr);
     std::ostringstream oss;
-    oss << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S"); // Format: YYYY-MM-DD HH:mm:ss
+    oss << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S");
     return oss.str();
 }
 
-/// Helper function to handle conditional logging
+// Helper function to log messages conditionally
 void logMessage(const std::string &message, const std::string &level, bool logOnce)
 {
     if (logOnce)
