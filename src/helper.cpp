@@ -6,7 +6,17 @@
 #include <stdexcept>
 #include <cmath>
 
-/// Generic function to validate input size
+/**
+ * @brief Validates the size of an input against a threshold.
+ *
+ * If the size is less than or equal to the threshold, logs an error message and throws an exception.
+ * Otherwise, logs a success message.
+ *
+ * @param size The size to validate.
+ * @param threshold The minimum acceptable size.
+ * @param message The error message to log and throw if validation fails.
+ * @param logOnce Whether to log the message only once.
+ */
 void validate_size(int size, int threshold, const std::string &message, bool logOnce)
 {
     if (size <= threshold)
@@ -17,7 +27,13 @@ void validate_size(int size, int threshold, const std::string &message, bool log
     logMessage("Validation passed for size: " + std::to_string(size), "INFO", logOnce);
 }
 
-/// Utility to print a line of symbols
+/**
+ * @brief Prints a line of symbols to the console.
+ *
+ * @param length The length of the line.
+ * @param symbol The symbol to repeat.
+ * @param logOnce Whether to log the message only once.
+ */
 void print_line(int length, char symbol, bool logOnce)
 {
     logMessage("Printing line of length: " + std::to_string(length) + " with symbol: " + std::string(1, symbol), "INFO", logOnce);
@@ -28,7 +44,17 @@ void print_line(int length, char symbol, bool logOnce)
     std::cout << '\n';
 }
 
-/// Histogram Plotter
+/**
+ * @brief Generates and displays a bar graph.
+ *
+ * @param bars An array of bar heights.
+ * @param n_bars The number of bars.
+ * @param logOnce Whether to log the message only once.
+ * @param height The maximum height of the bar graph.
+ * @param hScale The horizontal scaling factor.
+ * @param vScale The vertical scaling factor.
+ * @param symbol The symbol to use for the bars.
+ */
 void show_bargraph(int bars[], int n_bars, bool logOnce, int height, int hScale, float vScale, char symbol)
 {
     validate_size(n_bars, 0, "Number of bars must be greater than zero.", logOnce);
@@ -52,7 +78,13 @@ void show_bargraph(int bars[], int n_bars, bool logOnce, int height, int hScale,
     print_line(n_bars * hScale, symbol, logOnce); // Base line
 }
 
-/// Frequency Mapping Functions
+/**
+ * @brief Converts an index to a frequency value.
+ *
+ * @param index The index to convert.
+ * @param logOnce Whether to log the message only once.
+ * @return The corresponding frequency.
+ */
 float index2freq(int index, bool logOnce)
 {
     float freq = 2 * static_cast<float>(index) * RATE / FFTLEN;
@@ -60,6 +92,13 @@ float index2freq(int index, bool logOnce)
     return freq;
 }
 
+/**
+ * @brief Converts a frequency value to an index.
+ *
+ * @param freq The frequency to convert.
+ * @param logOnce Whether to log the message only once.
+ * @return The corresponding index.
+ */
 float freq2index(float freq, bool logOnce)
 {
     float index = 0.5 * freq * FFTLEN / RATE;
@@ -67,6 +106,17 @@ float freq2index(float freq, bool logOnce)
     return index;
 }
 
+/**
+ * @brief Maps a linear value to a logarithmic scale.
+ *
+ * @param LinMin The minimum linear value.
+ * @param LinRange The range of linear values.
+ * @param LogMin The minimum logarithmic value.
+ * @param LogRange The range of logarithmic values.
+ * @param LinVal The linear value to map.
+ * @param logOnce Whether to log the message only once.
+ * @return The mapped logarithmic value.
+ */
 float mapLin2Log(float LinMin, float LinRange, float LogMin, float LogRange, float LinVal, bool logOnce)
 {
     if (LinVal < LinMin)
@@ -79,7 +129,16 @@ float mapLin2Log(float LinMin, float LinRange, float LogMin, float LogRange, flo
     return result;
 }
 
-/// Approximate HCF
+/**
+ * @brief Computes an approximate highest common factor (HCF) for an array of inputs.
+ *
+ * @param inputs An array of input values.
+ * @param num_inputs The number of inputs.
+ * @param logOnce Whether to log the message only once.
+ * @param max_iter The maximum number of iterations for approximation.
+ * @param accuracy_threshold The accuracy threshold for computation.
+ * @return The approximate HCF.
+ */
 float approx_hcf(float inputs[], int num_inputs, bool logOnce, int max_iter, int accuracy_threshold)
 {
     validate_size(num_inputs, 1, "At least two inputs are required to compute HCF.", logOnce);
@@ -105,7 +164,16 @@ float approx_hcf(float inputs[], int num_inputs, bool logOnce, int max_iter, int
     return result;
 }
 
-/// Find Largest N Elements
+/**
+ * @brief Finds the largest N elements from an array.
+ *
+ * @param output The array to store the indices of the largest elements.
+ * @param input The input array of elements.
+ * @param n_out The number of largest elements to find.
+ * @param n_in The size of the input array.
+ * @param logOnce Whether to log the message only once.
+ * @param ignore_clumped Whether to ignore consecutive elements.
+ */
 void Find_n_Largest(int *output, sample *input, int n_out, int n_in, bool logOnce, bool ignore_clumped)
 {
     validate_size(n_in, 0, "Input array size must be greater than zero.", true);
@@ -133,7 +201,14 @@ void Find_n_Largest(int *output, sample *input, int n_out, int n_in, bool logOnc
     logMessage("Found largest elements: count = " + std::to_string(count), "INFO", logOnce);
 }
 
-/// Pitch Detection
+/**
+ * @brief Computes the pitch number for a given frequency.
+ *
+ * @param freq The frequency to analyze.
+ * @param logOnce Whether to log the message only once.
+ * @param centsSharp Pointer to store the cents deviation.
+ * @return The pitch number corresponding to the frequency.
+ */
 int pitchNumber(float freq, bool logOnce, float *centsSharp)
 {
     const double semitone = std::pow(2.0, 1.0 / 12.0);
@@ -160,6 +235,14 @@ int pitchNumber(float freq, bool logOnce, float *centsSharp)
     return pitch_num + 1;
 }
 
+/**
+ * @brief Retrieves the pitch name corresponding to a pitch number.
+ *
+ * @param name The character array to store the pitch name.
+ * @param pitch_num The pitch number (1-12).
+ * @param logOnce Whether to log the message only once.
+ * @return The length of the pitch name.
+ */
 int pitchName(char *name, int pitch_num, bool logOnce)
 {
     static const char *names[] = {"A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"};

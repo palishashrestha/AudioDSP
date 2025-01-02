@@ -5,7 +5,11 @@
 #include <stdexcept>
 #include <algorithm>
 
-/// Static chord definitions in root position
+/**
+ * @brief Static definitions for chords in root position.
+ *
+ * This array contains predefined chords with their notes and names.
+ */
 static chord A_root_chords[] = {
     {4, {1, 5, 8, 3}, "A add9"},
     {4, {1, 5, 8, 12}, "A Maj7"},
@@ -19,9 +23,20 @@ static chord A_root_chords[] = {
     {3, {1, 4, 8}, "A min"},
     {2, {1, 8}, "A 5"}};
 
+/**
+ * @brief Array containing all transposed chords.
+ *
+ * This array is populated during the initialization of the chord dictionary.
+ */
 static chord all_chords[NUM_CHORD_TYPES * 12];
 
-/// Check if a chord contains all the input notes
+/**
+ * @brief Checks if a chord contains all input notes.
+ *
+ * @param notes_in Array of input notes.
+ * @param num_notes_in Number of input notes.
+ * @return true if the chord contains all the input notes, false otherwise.
+ */
 bool chord::contains(int notes_in[], int num_notes_in)
 {
     for (int i = 0; i < num_notes_in; i++)
@@ -41,7 +56,14 @@ bool chord::contains(int notes_in[], int num_notes_in)
     return true;
 }
 
-/// Transpose a chord up by semitones
+/**
+ * @brief Transposes a chord by a specified number of semitones.
+ *
+ * @param old_chord The chord to be transposed.
+ * @param semitones_up The number of semitones to transpose.
+ * @return The transposed chord.
+ * @throws std::invalid_argument if semitones_up is outside the range [-11, 11].
+ */
 chord transpose_chord(chord old_chord, int semitones_up)
 {
     if (semitones_up < -11 || semitones_up > 11)
@@ -76,7 +98,9 @@ chord transpose_chord(chord old_chord, int semitones_up)
     return new_chord;
 }
 
-/// Initialize all chord transpositions
+/**
+ * @brief Initializes the chord dictionary by populating all transpositions.
+ */
 void initialize_chord_dictionary()
 {
     if (chord_dictionary_initialized)
@@ -97,7 +121,16 @@ void initialize_chord_dictionary()
     logMessage("Chord dictionary initialized successfully.", "INFO");
 }
 
-/// Identify the chord that matches the input notes
+/**
+ * @brief Identifies the chord that matches the input notes.
+ *
+ * @param name_out Output buffer to store the name of the identified chord.
+ * @param notes Array of input notes.
+ * @param num_notes Number of input notes.
+ * @return The length of the identified chord name, or 0 if no match is found.
+ * @throws std::invalid_argument if name_out is null or num_notes is less than or equal to 0.
+ * @throws std::runtime_error if the best matching chord has an invalid name.
+ */
 int identify_chord(char *name_out, int notes[], int num_notes)
 {
     if (name_out == nullptr)

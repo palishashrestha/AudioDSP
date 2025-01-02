@@ -4,14 +4,26 @@
 #include <stdexcept>
 #include <cmath>
 
-/// ----- Base Visualizer Class Methods -----
-
+/**
+ * @brief Initializes the histogram for the visualizer.
+ *
+ * Sets all histogram bars to zero.
+ * @param logOnce Whether to log this operation only once.
+ */
 void Visualizer::initializeHistogram(bool logOnce)
 {
     bargraph.assign(numbers, 0);
     logMessage("Initialized histogram with " + std::to_string(numbers) + " bars.", "INFO", logOnce);
 }
 
+/**
+ * @brief Applies adaptive scaling to the graph.
+ *
+ * Adjusts the graph scale based on the maximum value in the histogram if adaptive scaling is enabled.
+ * @param adaptive Whether adaptive scaling is enabled.
+ * @param graphScale The scale factor to adjust.
+ * @param logOnce Whether to log this operation only once.
+ */
 void Visualizer::applyAdaptiveScaling(bool adaptive, float &graphScale, bool logOnce)
 {
     if (!adaptive)
@@ -24,6 +36,12 @@ void Visualizer::applyAdaptiveScaling(bool adaptive, float &graphScale, bool log
     logMessage("Applied adaptive scaling with graph scale: " + std::to_string(graphScale), "INFO", logOnce);
 }
 
+/**
+ * @brief Smooths the histogram by averaging adjacent bars.
+ *
+ * If a bar is zero, it is replaced by the average of its neighbors.
+ * @param logOnce Whether to log this operation only once.
+ */
 void Visualizer::smoothHistogram(bool logOnce)
 {
     for (int i = 1; i < numbers - 1; i++)
@@ -35,7 +53,18 @@ void Visualizer::smoothHistogram(bool logOnce)
     logMessage("Smoothed histogram for " + std::to_string(numbers) + " bars.", "INFO", logOnce);
 }
 
-/// ----- Semilog Visualizer -----
+/**
+ * @brief Visualizes audio data using a semilogarithmic scale.
+ *
+ * @param MainAudioQueue The audio queue to process.
+ * @param minfreq The minimum frequency to display.
+ * @param maxfreq The maximum frequency to display.
+ * @param consoleWidth The width of the console.
+ * @param consoleHeight The height of the console.
+ * @param adaptive Whether to use adaptive scaling.
+ * @param logOnce Whether to log this operation only once.
+ * @param graphScale The scaling factor for the graph.
+ */
 void SemilogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale)
 {
     logMessage("Semilog visualization started.", "INFO", logOnce);
@@ -67,7 +96,18 @@ void SemilogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int m
     logMessage("Semilog visualization completed.", "INFO", logOnce);
 }
 
-/// ----- Linear Visualizer -----
+/**
+ * @brief Visualizes audio data using a linear scale.
+ *
+ * @param MainAudioQueue The audio queue to process.
+ * @param minfreq The minimum frequency to display.
+ * @param maxfreq The maximum frequency to display.
+ * @param consoleWidth The width of the console.
+ * @param consoleHeight The height of the console.
+ * @param adaptive Whether to use adaptive scaling.
+ * @param logOnce Whether to log this operation only once.
+ * @param graphScale The scaling factor for the graph.
+ */
 void LinearVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale)
 {
     logMessage("Linear visualization started.", "INFO", logOnce);
@@ -100,7 +140,18 @@ void LinearVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int ma
     logMessage("Linear visualization completed.", "INFO", logOnce);
 }
 
-/// ----- Loglog Visualizer -----
+/**
+ * @brief Visualizes audio data using a logarithmic-logarithmic scale.
+ *
+ * @param MainAudioQueue The audio queue to process.
+ * @param minfreq The minimum frequency to display.
+ * @param maxfreq The maximum frequency to display.
+ * @param consoleWidth The width of the console.
+ * @param consoleHeight The height of the console.
+ * @param adaptive Whether to use adaptive scaling.
+ * @param logOnce Whether to log this operation only once.
+ * @param graphScale The scaling factor for the graph.
+ */
 void LoglogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int maxfreq, int consoleWidth, int consoleHeight, bool adaptive, bool logOnce, float graphScale)
 {
     logMessage("Loglog visualization started.", "INFO", logOnce);
@@ -131,7 +182,16 @@ void LoglogVisualizer::visualize(AudioQueue &MainAudioQueue, int minfreq, int ma
     logMessage("Loglog visualization completed.", "INFO", logOnce);
 }
 
-/// ----- Spectral Tuner -----
+/**
+ * @brief Visualizes audio data using a spectral tuner display.
+ *
+ * @param MainAudioQueue The audio queue to process.
+ * @param consoleWidth The width of the console.
+ * @param consoleHeight The height of the console.
+ * @param logOnce Whether to log this operation only once.
+ * @param adaptive Whether to use adaptive scaling.
+ * @param graphScale The scaling factor for the graph.
+ */
 void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeight, bool logOnce, bool adaptive, float graphScale)
 {
     logMessage("Spectral tuner visualization started.", "INFO", logOnce);
@@ -176,7 +236,14 @@ void SpectralTuner(AudioQueue &MainAudioQueue, int consoleWidth, int consoleHeig
     logMessage("Spectral tuner visualization completed.", "INFO", logOnce);
 }
 
-/// ----- Auto Tuner -----
+/**
+ * @brief Visualizes audio data using an auto-tuner display.
+ *
+ * @param MainAudioQueue The audio queue to process.
+ * @param consoleWidth The width of the console.
+ * @param logOnce Whether to log this operation only once.
+ * @param span_semitones The span of semitones to consider.
+ */
 void AutoTuner(AudioQueue &MainAudioQueue, int consoleWidth, bool logOnce, int span_semitones)
 {
     logMessage("Auto tuner visualization started.", "INFO", logOnce);
@@ -221,7 +288,13 @@ void AutoTuner(AudioQueue &MainAudioQueue, int consoleWidth, bool logOnce, int s
     logMessage("Auto tuner visualization completed.", "INFO", logOnce);
 }
 
-/// ----- Chord Guesser -----
+/**
+ * @brief Attempts to identify chords from audio data.
+ *
+ * @param MainAudioQueue The audio queue to process.
+ * @param logOnce Whether to log this operation only once.
+ * @param max_notes The maximum number of notes to consider.
+ */
 void ChordGuesser(AudioQueue &MainAudioQueue, bool logOnce, int max_notes)
 {
     logMessage("Chord guesser started.", "INFO", logOnce);

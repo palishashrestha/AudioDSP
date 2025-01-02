@@ -14,12 +14,28 @@
 float echoVolume;                    // Echo playback volume
 AudioQueue MainAudioQueue(10000000); // Main AudioQueue for recording and playback
 
+/**
+ * @brief Callback for recording audio data.
+ *
+ * Pushes audio samples from the recording stream into the MainAudioQueue.
+ * @param userdata Unused user data pointer.
+ * @param stream Pointer to the audio stream buffer.
+ * @param streamLength Length of the audio stream buffer in bytes.
+ */
 void RecCallback(void *userdata, Uint8 *stream, int streamLength)
 {
     Uint32 length = (Uint32)streamLength;
     MainAudioQueue.push((sample *)stream, length / sizeof(sample));
 }
 
+/**
+ * @brief Callback for playing back audio data.
+ *
+ * Pops audio samples from the MainAudioQueue and writes them to the playback stream.
+ * @param userdata Unused user data pointer.
+ * @param stream Pointer to the audio stream buffer.
+ * @param streamLength Length of the audio stream buffer in bytes.
+ */
 void PlayCallback(void *userdata, Uint8 *stream, int streamLength)
 {
     Uint32 length = (Uint32)streamLength;
@@ -27,7 +43,12 @@ void PlayCallback(void *userdata, Uint8 *stream, int streamLength)
 }
 
 /**
- * Error handling wrapper for SDL audio initialization
+ * @brief Initializes SDL audio devices for recording and playback.
+ *
+ * Sets up the SDL audio system, configures recording and playback devices, and starts audio processing.
+ * @param RecDevice Reference to the recording audio device ID.
+ * @param PlayDevice Reference to the playback audio device ID.
+ * @throws std::runtime_error if initialization fails for either recording or playback device.
  */
 void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice)
 {
@@ -66,7 +87,13 @@ void InitializeAudio(SDL_AudioDeviceID &RecDevice, SDL_AudioDeviceID &PlayDevice
 }
 
 /**
- * Function to get user input with basic validation
+ * @brief Prompts the user for input and validates the range.
+ *
+ * Ensures the user input is within the specified range and provides feedback for invalid input.
+ * @param prompt The message to display to the user.
+ * @param minValue The minimum allowable value.
+ * @param maxValue The maximum allowable value.
+ * @return The validated integer input from the user.
  */
 int getValidatedInput(const std::string &prompt, int minValue, int maxValue)
 {
@@ -93,7 +120,16 @@ int getValidatedInput(const std::string &prompt, int minValue, int maxValue)
 }
 
 /**
- * Main visualization handler to reduce switch-case redundancy
+ * @brief Handles visualization based on user selection.
+ *
+ * Reduces redundancy in the main function by encapsulating visualization logic.
+ * @param choice The user-selected visualization option.
+ * @param lim1 The lower frequency limit.
+ * @param lim2 The upper frequency limit.
+ * @param adaptive Whether adaptive scaling is enabled.
+ * @param consoleWidth The width of the console window.
+ * @param consoleHeight The height of the console window.
+ * @param logOnce Whether to log certain messages only once.
  */
 void runVisualizer(int choice, int lim1, int lim2, bool adaptive, int consoleWidth, int consoleHeight, bool logOnce)
 {
@@ -134,7 +170,10 @@ void runVisualizer(int choice, int lim1, int lim2, bool adaptive, int consoleWid
 }
 
 /**
- * Main menu display
+ * @brief Displays the main menu and prompts the user to select an option.
+ *
+ * Provides a list of visualization and algorithm options.
+ * @return The user-selected menu option.
  */
 int displayMenu()
 {
@@ -157,6 +196,12 @@ int displayMenu()
     return getValidatedInput("", 1, 10);
 }
 
+/**
+ * @brief Captures a single key press from the user.
+ *
+ * Checks for and returns a character if a key is pressed.
+ * @return The captured character, or 0 if no key is pressed.
+ */
 char capture_button_press()
 {
     if (_kbhit())
@@ -165,7 +210,12 @@ char capture_button_press()
 }
 
 /**
- * Main function
+ * @brief Entry point of the application.
+ *
+ * Initializes audio, displays the menu, and handles user input and visualization.
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line arguments.
+ * @return Exit status of the application.
  */
 int main(int argc, char **argv)
 {

@@ -8,6 +8,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+/**
+ * @brief Constructs an AudioQueue instance with a specified queue length.
+ *
+ * @param QueueLength The length of the audio queue.
+ * @throws std::invalid_argument if QueueLength is less than or equal to zero.
+ */
 AudioQueue::AudioQueue(int QueueLength) : len(QueueLength), inpos(0), outpos(0)
 {
     if (QueueLength <= 0)
@@ -19,12 +25,23 @@ AudioQueue::AudioQueue(int QueueLength) : len(QueueLength), inpos(0), outpos(0)
     logMessage("AudioQueue created with length: " + std::to_string(QueueLength), "INFO");
 }
 
+/**
+ * @brief Destructor for AudioQueue.
+ *
+ * Frees the allocated audio buffer.
+ */
 AudioQueue::~AudioQueue()
 {
     delete[] audio;
     logMessage("AudioQueue destroyed.", "INFO");
 }
 
+/**
+ * @brief Validates if there is enough space available in the queue to push samples.
+ *
+ * @param n_samples Number of samples to validate.
+ * @throws std::overflow_error if there is insufficient space available.
+ */
 void AudioQueue::validate_space(int n_samples) const
 {
     if (!space_available(n_samples))
@@ -34,6 +51,12 @@ void AudioQueue::validate_space(int n_samples) const
     }
 }
 
+/**
+ * @brief Validates if there is enough data available in the queue to pop samples.
+ *
+ * @param n_samples Number of samples to validate.
+ * @throws std::underflow_error if there is insufficient data available.
+ */
 void AudioQueue::validate_data(int n_samples) const
 {
     if (!data_available(n_samples))
@@ -43,16 +66,35 @@ void AudioQueue::validate_data(int n_samples) const
     }
 }
 
+/**
+ * @brief Checks if there is enough data available in the queue.
+ *
+ * @param n_samples Number of samples to check.
+ * @return true if sufficient data is available, false otherwise.
+ */
 bool AudioQueue::data_available(int n_samples) const
 {
     return (inpos >= outpos) ? (inpos - outpos) >= n_samples : (inpos + len - outpos) >= n_samples;
 }
 
+/**
+ * @brief Checks if there is enough space available in the queue.
+ *
+ * @param n_samples Number of samples to check.
+ * @return true if sufficient space is available, false otherwise.
+ */
 bool AudioQueue::space_available(int n_samples) const
 {
     return (inpos >= outpos) ? (outpos + len - inpos) > n_samples : (outpos - inpos) > n_samples;
 }
 
+/**
+ * @brief Pushes audio samples into the queue.
+ *
+ * @param input Array of input samples.
+ * @param n_samples Number of samples to push.
+ * @param volume Volume multiplier to apply to the input samples.
+ */
 void AudioQueue::push(const sample *input, int n_samples, float volume)
 {
     validate_space(n_samples);
@@ -63,6 +105,13 @@ void AudioQueue::push(const sample *input, int n_samples, float volume)
     inpos = (inpos + n_samples) % len;
 }
 
+/**
+ * @brief Pops audio samples from the queue.
+ *
+ * @param output Array to store the output samples.
+ * @param n_samples Number of samples to pop.
+ * @param volume Volume multiplier to apply to the output samples.
+ */
 void AudioQueue::pop(sample *output, int n_samples, float volume)
 {
     validate_data(n_samples);
@@ -73,6 +122,13 @@ void AudioQueue::pop(sample *output, int n_samples, float volume)
     outpos = (outpos + n_samples) % len;
 }
 
+/**
+ * @brief Peeks at audio samples from the queue without removing them.
+ *
+ * @param output Array to store the output samples.
+ * @param n_samples Number of samples to peek.
+ * @param volume Volume multiplier to apply to the output samples.
+ */
 void AudioQueue::peek(sample *output, int n_samples, float volume) const
 {
     validate_data(n_samples);
@@ -82,6 +138,13 @@ void AudioQueue::peek(sample *output, int n_samples, float volume) const
     }
 }
 
+/**
+ * @brief Peeks at the most recent audio samples from the queue without removing them.
+ *
+ * @param output Array to store the output samples.
+ * @param n_samples Number of samples to peek.
+ * @param volume Volume multiplier to apply to the output samples.
+ */
 void AudioQueue::peekFreshData(sample *output, int n_samples, float volume) const
 {
     validate_data(n_samples);
@@ -91,6 +154,14 @@ void AudioQueue::peekFreshData(sample *output, int n_samples, float volume) cons
     }
 }
 
+/**
+ * @brief Computes the Fast Fourier Transform (FFT) for a given input.
+ *
+ * @param output Array to store the FFT result.
+ * @param input Array of complex input samples.
+ * @param n Number of samples, must be a power of two.
+ * @throws std::invalid_argument if n is not a power of two or is less than or equal to zero.
+ */
 void fft(cmplx *output, const cmplx *input, int n)
 {
     static bool logOnce = true; // Ensure single logging for the entire FFT computation
@@ -131,6 +202,16 @@ void fft(cmplx *output, const cmplx *input, int n)
     }
 }
 
+/**
+ * @brief Computes the frequency content of an input signal using FFT.
+ *
+ * @param output Array to store the computed frequency magnitudes.
+ * @param input Array of input samples.
+ * @param n Number of samples, must be a power of two.
+ * @param logOnce Whether to log this computation only once.
+ * @param vScale Scale factor for the output magnitudes.
+ * @throws std::invalid_argument if n is not a power of two or is less than or equal to zero.
+ */
 void FindFrequencyContent(sample *output, const sample *input, int n, bool logOnce, float vScale)
 {
     if (n <= 0 || (n & (n - 1)) != 0)
